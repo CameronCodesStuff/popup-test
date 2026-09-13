@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="A simple browser popup access test and tab-opening demonstration.">
+  <title>Popup Access Check</title>
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --bg-accent: #e4e9f2;
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-strong: rgba(255, 255, 255, 0.94);
+      --text: #172033;
+      --muted: #657086;
+      --border: rgba(23, 32, 51, 0.10);
+      --primary: #315bea;
+      --primary-hover: #264bd1;
+      --success: #087f5b;
+      --warning: #9a6700;
+      --danger: #a33a3a;
+      --shadow: 0 24px 70px rgba(28, 42, 72, 0.14);
+      --ring: rgba(49, 91, 234, 0.30);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0c111b;
+        --bg-accent: #121a28;
+        --surface: rgba(22, 30, 44, 0.78);
+        --surface-strong: rgba(24, 33, 49, 0.94);
+        --text: #eef3fb;
+        --muted: #a8b3c5;
+        --border: rgba(238, 243, 251, 0.11);
+        --primary: #6d8cff;
+        --primary-hover: #83a0ff;
+        --success: #4dd6ad;
+        --warning: #e7bb58;
+        --danger: #ff8585;
+        --shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+        --ring: rgba(109, 140, 255, 0.35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 15%, rgba(49, 91, 234, 0.12), transparent 30%),
+        radial-gradient(circle at 82% 80%, rgba(70, 170, 160, 0.10), transparent 32%),
+        linear-gradient(135deg, var(--bg), var(--bg-accent));
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .shell {
+      width: min(680px, 100%);
+      position: relative;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(28px, 6vw, 54px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      animation: rise 550ms ease-out both;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent);
+      opacity: .7;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 20px rgba(0,0,0,.06);
+    }
+
+    .brand-mark svg { width: 18px; height: 18px; }
+
+    h1 {
+      margin: 0;
+      max-width: 540px;
+      font-size: clamp(2rem, 6vw, 3.25rem);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+    }
+
+    .lede {
+      margin: 18px 0 30px;
+      max-width: 540px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .status {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px 16px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: var(--surface-strong);
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.45;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 12%, transparent);
+    }
+
+    .status.success { color: var(--success); }
+    .status.warning { color: var(--warning); }
+    .status.info { color: var(--muted); }
+    .status.error { color: var(--danger); }
+
+    .actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    button {
+      width: 100%;
+      min-height: 56px;
+      border: 0;
+      border-radius: 15px;
+      padding: 14px 20px;
+      font: inherit;
+      font-weight: 750;
+      letter-spacing: -.01em;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, opacity 160ms ease;
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--ring);
+      outline-offset: 3px;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .primary {
+      color: white;
+      background: linear-gradient(135deg, var(--primary), #5a72e8);
+      box-shadow: 0 14px 30px rgba(49, 91, 234, .24);
+    }
+
+    .primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--primary-hover), var(--primary));
+      box-shadow: 0 17px 34px rgba(49, 91, 234, .30);
+    }
+
+    .secondary {
+      color: var(--text);
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+    }
+
+    .secondary:hover:not(:disabled) {
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+
+    .stop {
+      color: var(--danger);
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .48;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .start-panel {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      animation: fade 280ms ease-out both;
+    }
+
+    .start-panel[hidden] { display: none; }
+
+    .timer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .timer strong {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .attempts {
+      margin: 15px 0 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .75rem;
+      line-height: 1.5;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 14px; }
+      .card { border-radius: 22px; padding: 27px 20px; }
+      .brand { margin-bottom: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="card" aria-labelledby="page-title">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 3l7 3v5c0 4.4-2.8 8.4-7 10-4.2-1.6-7-5.6-7-10V6l7-3z"/>
+            <path d="M8.5 12l2.2 2.2 4.8-5"/>
+          </svg>
+        </span>
+        Browser access check
+      </div>
+
+      <h1 id="page-title">Verify popup access.</h1>
+      <p class="lede">
+        Run a quick, standard browser test. No permissions are bypassed and no hidden
+        redirects or background tracking are used.
+      </p>
+
+      <div id="status" class="status info" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="statusText">Popup test has not been completed.</span>
+      </div>
+
+      <div class="actions">
+        <button id="checkButton" class="primary" type="button">
+          Check for popups
+        </button>
+      </div>
+
+      <section id="startPanel" class="start-panel" hidden aria-labelledby="start-heading">
+        <div class="timer" aria-live="polite">
+          <span id="startHeading">Next attempt</span>
+          <strong id="countdown">—</strong>
+        </div>
+
+        <div class="actions">
+          <button id="startButton" class="primary" type="button">
+            Start
+          </button>
+          <button id="stopButton" class="stop" type="button" disabled>
+            Stop
+          </button>
+        </div>
+
+        <p class="attempts">
+          Opening attempts: <strong id="attemptCount">0</strong>
+        </p>
+      </section>
+
+      <p class="footer">
+        Popup behavior is controlled by your browser. If an opening is blocked,
+        this page will not attempt to circumvent that protection.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const YOUTUBE_URL = "https://www.youtube.com/";
+    const POPUP_TEST_KEY = "popupAccessConfirmed";
+
+    const statusEl = document.getElementById("status");
+    const statusTextEl = document.getElementById("statusText");
+    const checkButton = document.getElementById("checkButton");
+    const startPanel = document.getElementById("startPanel");
+    const startButton = document.getElementById("startButton");
+    const stopButton = document.getElementById("stopButton");
+    const countdownEl = document.getElementById("countdown");
+    const attemptCountEl = document.getElementById("attemptCount");
+
+    let timerId = null;
+    let countdownId = null;
+    let secondsRemaining = 10;
+    let attempts = 0;
+
+    function setStatus(message, type = "info") {
+      statusEl.className = `status ${type}`;
+      statusTextEl.textContent = message;
+    }
+
+    function showStartPanel() {
+      startPanel.hidden = false;
+      startButton.disabled = false;
+    }
+
+    function popupTestSucceeded() {
+      try {
+        sessionStorage.setItem(POPUP_TEST_KEY, "true");
+      } catch (_) {
+        // sessionStorage may be unavailable in restricted browser contexts.
+      }
+
+      showStartPanel();
+      setStatus("Popup access confirmed ✓", "success");
+    }
+
+    // Popup test: use only the standard window.open() API and respect browser blocking.
+    function testPopup() {
+      checkButton.disabled = true;
+      setStatus("Testing popup access…", "info");
+
+      const testWindow = window.open(
+        "about:blank",
+        "popupAccessTest",
+        "popup,width=420,height=320,resizable=yes"
+      );
+
+      if (testWindow && !testWindow.closed) {
+        popupTestSucceeded();
+
+        // Close the temporary test tab/window when the browser allows it.
+        try {
+          testWindow.close();
+        } catch (_) {
+          // Closing can be restricted by the browser.
+        }
+      } else {
+        setStatus(
+          "Popup was blocked. Allow popups for this site in your browser, then try again.",
+          "warning"
+        );
+      }
+
+      checkButton.disabled = false;
+    }
+
+    function openYouTube() {
+      const opened = window.open(YOUTUBE_URL, "_blank", "noopener");
+
+      attempts += 1;
+      attemptCountEl.textContent = String(attempts);
+
+      if (opened && !opened.closed) {
+        setStatus(
+          `YouTube opening attempt ${attempts} was allowed by the browser.`,
+          "success"
+        );
+      } else {
+        setStatus(
+          `Opening attempt ${attempts} was blocked by the browser. No protection was bypassed.`,
+          "warning"
+        );
+      }
+    }
+
+    function updateCountdown() {
+      countdownEl.textContent = `${secondsRemaining}s`;
+    }
+
+    function stopTimer() {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+
+      if (countdownId !== null) {
+        clearInterval(countdownId);
+        countdownId = null;
+      }
+
+      secondsRemaining = 10;
+      countdownEl.textContent = "Stopped";
+      startButton.disabled = false;
+      stopButton.disabled = true;
+    }
+
+    function startTimer() {
+      // Prevent duplicate intervals if Start is clicked repeatedly.
+      if (timerId !== null) return;
+
+      attempts = 0;
+      attemptCountEl.textContent = "0";
+      startButton.disabled = true;
+      stopButton.disabled = false;
+
+      // Open immediately, then schedule another standard window.open() every 10 seconds.
+      openYouTube();
+
+      secondsRemaining = 10;
+      updateCountdown();
+
+      countdownId = setInterval(() => {
+        secondsRemaining -= 1;
+        updateCountdown();
+      }, 1000);
+
+      timerId = setInterval(() => {
+        openYouTube();
+        secondsRemaining = 10;
+        updateCountdown();
+      }, 10000);
+    }
+
+    checkButton.addEventListener("click", testPopup);
+    startButton.addEventListener("click", startTimer);
+    stopButton.addEventListener("click", stopTimer);
+
+    // Restore the successful popup check for the current browser session.
+    try {
+      if (sessionStorage.getItem(POPUP_TEST_KEY) === "true") {
+        showStartPanel();
+        setStatus("Popup access confirmed ✓", "success");
+      }
+    } catch (_) {
+      // Continue normally if sessionStorage is unavailable.
+    }
+  </script>
+</body>
+</html>
